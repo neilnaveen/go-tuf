@@ -36,3 +36,27 @@ func (KeysSuite) TestSignerKeyIDs(c *C) {
 	err = signer.UnmarshalPrivateKey(privKey)
 	c.Assert(err, IsNil)
 }
+func FuzzSignerKeyIDs(f *testing.F) {
+	f.Fuzz(func(t *testing.T, s string) {
+		c := &C{}
+		_, err := GenerateEd25519Key()
+		c.Assert(err, IsNil)
+		signer, err := GenerateEd25519Key()
+		c.Assert(err, IsNil)
+		privKey, err := signer.MarshalPrivateKey()
+		c.Assert(err, IsNil)
+		privKey.Scheme = s
+		err = signer.UnmarshalPrivateKey(privKey)
+		c.Assert(err, IsNil)
+
+		// Make sure we preserve ids if we don't have any
+		// keyid_hash_algorithms.
+		signer, err = GenerateEd25519Key()
+		c.Assert(err, IsNil)
+		privKey, err = signer.MarshalPrivateKey()
+		c.Assert(err, IsNil)
+		privKey.Algorithms = []string{}
+		err = signer.UnmarshalPrivateKey(privKey)
+		c.Assert(err, IsNil)
+	})
+}
